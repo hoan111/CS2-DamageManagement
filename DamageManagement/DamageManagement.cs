@@ -14,7 +14,7 @@ namespace DamageManagement
     {
         [JsonPropertyName("Enable")]
         public bool enableCfg { get; set; } = true;
-        [JsonPropertyName("exclude_inflictors")] public string[] listWeapons { get; set; } = [];
+        [JsonPropertyName("enable_inflictors")] public string[] listWeapons { get; set; } = [];
     }
 
     public class DamageManagement : BasePlugin, IPluginConfig<Config>
@@ -25,7 +25,10 @@ namespace DamageManagement
         public override string ModuleAuthor => "HoanNK";
         public Config Config { get; set; }
         bool enabled { get; set; }
-        string[] excludeInflictors = [];
+
+        //This contains all designer name of the weapon class that allow to be taken damage to the teammates
+        //Designer name can be found here https://cs2.poggu.me/dumped-data/entity-list
+        string[] enableDmgInflictors = [];
         public override void Load(bool hotReload)
         {
             Logger.LogInformation("Loading plugin");
@@ -35,11 +38,11 @@ namespace DamageManagement
         public void OnConfigParsed(Config config)
         {
             enabled = config.enableCfg;
-            excludeInflictors = config.listWeapons;
-            Logger.LogInformation("{@excludeInflictors}", excludeInflictors);
-            if(excludeInflictors.Length == 0)
+            enableDmgInflictors = config.listWeapons;
+            Logger.LogInformation("{@enableDmgInflictors}", enableDmgInflictors);
+            if(enableDmgInflictors.Length == 0)
             {
-                excludeInflictors = ["inferno", "hegrenade_projectile", "flashbang_projectile", "smokegrenade_projectile", "decoy_projectile", "planted_c4"];
+                enableDmgInflictors = ["inferno", "hegrenade_projectile", "flashbang_projectile", "smokegrenade_projectile", "decoy_projectile", "planted_c4"];
             }
         }
 
@@ -63,7 +66,7 @@ namespace DamageManagement
                     //Check if friendly fire
                     if (attackPlayer.TeamNum == playerTakenDmg.TeamNum && "player".Equals(victim.DesignerName))
                     {
-                        if (excludeInflictors.Contains(inflictor))
+                        if (enableDmgInflictors.Contains(inflictor))
                         {
                             return HookResult.Continue;
                         }
