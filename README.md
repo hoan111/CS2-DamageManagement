@@ -1,7 +1,7 @@
 # CS2-DamageManagement (Linux only)
 This is a plugin that modifies damage done to teammates like Faceit. I tried to run this plugin on Windows but it didn't work.
 
-Update: I currently working on a metamod plugin for Windows version. It's working but I need more work on this.
+**Update: I currently working on a metamod plugin for Windows version. It's working but I need more work on this.**
 # Requirements
 * `mp_friendlyfire` must be set to 1
 * [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) must be installed on your CS2 server.
