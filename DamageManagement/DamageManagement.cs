@@ -12,16 +12,17 @@ namespace DamageManagement
 {
     public class Config : BasePluginConfig
     {
-        [JsonPropertyName("Enable")]
+        [JsonPropertyName("enable")]
         public bool enableCfg { get; set; } = true;
-        [JsonPropertyName("enable_inflictors")] public string[] listWeapons { get; set; } = [];
+        [JsonPropertyName("enable_inflictors")] public string[] listWeapons { get; set; } = ["inferno", "hegrenade_projectile", "flashbang_projectile", 
+            "smokegrenade_projectile", "decoy_projectile", "planted_c4"];
     }
 
     public class DamageManagement : BasePlugin, IPluginConfig<Config>
     {
-        public override string ModuleName => "Faceit teammates damage modify";
+        public override string ModuleName => "CS2-DamageManagement";
 
-        public override string ModuleVersion => "1.0";
+        public override string ModuleVersion => "1.1";
         public override string ModuleAuthor => "HoanNK";
         public Config Config { get; set; }
         bool enabled { get; set; }
@@ -39,7 +40,7 @@ namespace DamageManagement
         {
             enabled = config.enableCfg;
             enableDmgInflictors = config.listWeapons;
-            Logger.LogInformation("{@enableDmgInflictors}", enableDmgInflictors);
+            Logger.LogInformation("Config has been parsed successfully");
             if(enableDmgInflictors.Length == 0)
             {
                 enableDmgInflictors = ["inferno", "hegrenade_projectile", "flashbang_projectile", "smokegrenade_projectile", "decoy_projectile", "planted_c4"];
@@ -90,18 +91,17 @@ namespace DamageManagement
         public void OnEnableCommand(CCSPlayerController? player, CommandInfo commandInfo)
         {
             string arg = commandInfo.GetArg(1);
-            if ("true".Equals(arg))
+            if ("true".Equals(arg) || "1".Equals(arg))
             {
                 enabled = true;
+                return;
             }
-            else if ("false".Equals(arg))
+            if ("false".Equals(arg) || "0".Equals(arg))
             {
                 enabled = false;
+                return;
             }
-            else
-            {
-                commandInfo.ReplyToCommand("true/false value only");
-            }
+            commandInfo.ReplyToCommand("true/false value only");
         }
     }
 }
