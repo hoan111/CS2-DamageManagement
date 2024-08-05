@@ -1,10 +1,12 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using DamageManagement.API;
 using Microsoft.Extensions.Logging;
 using System.Text.Json.Serialization;
 
@@ -18,7 +20,7 @@ namespace DamageManagement
             "smokegrenade_projectile", "decoy_projectile", "planted_c4"];
     }
 
-    public class DamageManagement : BasePlugin, IPluginConfig<Config>
+    public partial class DamageManagement : BasePlugin, IPluginConfig<Config>
     {
         public override string ModuleName => "CS2-DamageManagement";
 
@@ -26,13 +28,22 @@ namespace DamageManagement
         public override string ModuleAuthor => "HoanNK";
         public Config Config { get; set; }
         bool enabled { get; set; }
-
+        static bool isSlayCommand { get; set; }
         //This contains all designer name of the weapon class that allow to be taken damage to the teammates
         //Designer name can be found here https://cs2.poggu.me/dumped-data/entity-list
         string[] enableDmgInflictors = [];
+
+        //Shared API
+        public DamageManagementAPI managementAPI { get; set; }
+        private static PluginCapability<IDamageManagementAPI> DamageManagemenCapability { get; } = new("damagemanagement:api");   
+
         public override void Load(bool hotReload)
         {
             Logger.LogInformation("Loading plugin");
+
+            managementAPI = new DamageManagementAPI();
+            Capabilities.RegisterPluginCapability(DamageManagemenCapability, () => managementAPI);
+
             VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
         }
 
@@ -55,20 +66,31 @@ namespace DamageManagement
 
         private HookResult OnTakeDamage(DynamicHook hook)
         {
+            //Check handle for API first
+            var ExecuteOriginalMethod = managementAPI.IsNeedCallOriginalMethod();
+            //it will allow consumer determine execute original method or not
+            if (ExecuteOriginalMethod)
+            {
+                return HookResult.Continue;
+            }
             if (enabled)
             {
                 try
                 {
                     var victim = hook.GetParam<CEntityInstance>(0);
                     var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
+
                     string inflictor = damageInfo.Inflictor.Value.DesignerName ?? "";
                     var attackPlayer = new CCSPlayerPawn(damageInfo.Attacker.Value.Handle);
                     var playerTakenDmg = new CCSPlayerController(victim.Handle);
+                    
                     //Check if friendly fire
                     if (attackPlayer.TeamNum == playerTakenDmg.TeamNum && "player".Equals(victim.DesignerName))
                     {
+
                         if (enableDmgInflictors.Contains(inflictor))
                         {
+                            isSlayCommand = false;
                             return HookResult.Continue;
                         }
                         return HookResult.Handled;
@@ -103,5 +125,6 @@ namespace DamageManagement
             }
             commandInfo.ReplyToCommand("true/false value only");
         }
+
     }
 }

@@ -4,3 +4,8 @@ obj/
 .git
 .vscode/
 .idea/
+DamageManagement/bin/
+DamageManagement/obj/
+SharedAPI/bin/
+SharedAPI/obj/
+
